@@ -38,7 +38,7 @@ const Body = () => {
   const [recordsPerPage, setRecordsPerPage] = useState(10); // Record Per Page
   const [showModal, setShowModal] = useState(false); // Update Modal
   const [toUpdate, setToUpdate] = useState({}); //The entry which is to be updated
-  const [error, setError] = useState(true); //If error show Error Component
+  const [error, setError] = useState(false); //If error show Error Component
 
   //Add checked checkbox in selectedCheckbox state
   function addSelected(e) {
