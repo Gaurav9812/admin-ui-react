@@ -7,6 +7,7 @@ import Writing from "./assets/img/writing.png";
 import Delete from "./assets/img/delete.png";
 import UpdateModal from "./UpdateModal";
 import { GEEKTRUST_URL, addCheckBox } from "../utils/helpers";
+import Error from "./Error";
 
 const Body = () => {
   const [members, setMembers] = useState([
@@ -30,22 +31,26 @@ const Body = () => {
     },
   ]);
 
-  const [filteredMembers, setFilteredMembers] = useState([]);
-  const [selectedCheckbox, setSelectedCheckbox] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [page, setPage] = useState(1);
-  const [recordsPerPage, setRecordsPerPage] = useState(10);
-  const [showModal, setShowModal] = useState(false);
-  const [toUpdate, setToUpdate] = useState({});
+  const [filteredMembers, setFilteredMembers] = useState([]); //To show only 10 records on page and show search results
+  const [selectedCheckbox, setSelectedCheckbox] = useState([]); //Selected checkbox
+  const [searchText, setSearchText] = useState(""); //Search Text
+  const [page, setPage] = useState(1); //Current Page
+  const [recordsPerPage, setRecordsPerPage] = useState(10); // Record Per Page
+  const [showModal, setShowModal] = useState(false); // Update Modal
+  const [toUpdate, setToUpdate] = useState({}); //The entry which is to be updated
+  const [error, setError] = useState(true); //If error show Error Component
 
+  //Add checked checkbox in selectedCheckbox state
   function addSelected(e) {
     setSelectedCheckbox(addCheckBox(selectedCheckbox, e.target.value));
   }
 
+  //To Fetch Data from Api
   useEffect(() => {
     getMembers();
   }, []);
 
+  //Fetching data from api and setting in state
   async function getMembers() {
     try {
       let response = await fetch(GEEKTRUST_URL);
@@ -55,9 +60,11 @@ const Body = () => {
       setFilteredMembers(json);
     } catch (e) {
       console.log(e.message);
+      setError(true);
     }
   }
 
+  //Deleting one member form icon on row
   const deleteMember = (memberId) => {
     let filteredMembersTemp = members.filter((member) => {
       return member.id != memberId;
@@ -71,6 +78,7 @@ const Body = () => {
     );
   };
 
+  // deleting multiple checked members from delete btn on left of pages
   const deleteMultipleMembers = () => {
     let filteredMembersTemp = filteredMembers.filter((member) => {
       return !selectedCheckbox.includes(parseInt(member.id));
@@ -80,6 +88,7 @@ const Body = () => {
     setSelectedCheckbox([]);
   };
 
+  //add all or remove all from selected checkbox on current page
   const addAllInSelected = (checked) => {
     let allCheckbox = [];
     if (!checked) {
@@ -108,6 +117,7 @@ const Body = () => {
     }
   };
 
+  //filter members according to search text and setting in filtered members
   const filterMembers = (text, members) => {
     setSearchText(text);
 
@@ -123,6 +133,7 @@ const Body = () => {
     );
   };
 
+  //updating member
   const submitForm = (id, name, email, role) => {
     let newMembers = [];
     members.forEach((member, index) => {
@@ -138,6 +149,7 @@ const Body = () => {
     setSearchText("");
   };
 
+  //checking if all members are in selected checkbox
   const checkForAllBoxInCurrPage = () => {
     let flag = true;
     filteredMembers
@@ -153,7 +165,10 @@ const Body = () => {
 
   let checked = checkForAllBoxInCurrPage();
 
-  return (
+  //Showing Error component if any error arouse
+  return error ? (
+    <Error />
+  ) : (
     <>
       {showModal && (
         <UpdateModal
@@ -174,9 +189,11 @@ const Body = () => {
             placeholder="Search by name, email and role"
           />
           <p>
-            {searchText != "" &&
-              filteredMembers.length > 0 &&
-              filteredMembers.length + " members found"}
+            {searchText != ""
+              ? filteredMembers.length > 0
+                ? filteredMembers.length + " members found"
+                : "No members found"
+              : ""}
           </p>
         </div>
         <table>
