@@ -35,7 +35,7 @@ const Body = () => {
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
-  const [allCheckboxInCurrPage, setAllCheckboxInCurrPage] = useState(false);
+  const [allCheckboxInCurrPage, setAllCheckboxInCurrPage] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [toUpdate, setToUpdate] = useState({});
 
@@ -47,26 +47,33 @@ const Body = () => {
     getMembers();
   }, []);
 
+  useEffect(() => {
+    CheckCheckBoxes();
+  }, [selectedCheckbox, filteredMembers]);
   // console.log(members)
   // console.log(selectedCheckbox);
 
   async function getMembers() {
-    let response = await fetch(
-      "https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json"
-    );
-    let json = await response.json();
+    try {
+      let response = await fetch(
+        "https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json"
+      );
+      let json = await response.json();
 
-    setMembers(json);
-    setFilteredMembers(json);
+      setMembers(json);
+      setFilteredMembers(json);
+    } catch (e) {
+      console.log(e.message);
+    }
   }
 
   const deleteMember = (memberId) => {
     let filteredMembersTemp = members.filter((member) => {
       return member.id != memberId;
     });
-    setFilteredMembers(filteredMembersTemp);
+    // setFilteredMembers(filteredMembersTemp);
     setMembers(filteredMembersTemp);
-    filterMembers(searchText);
+    filterMembers(searchText, filteredMembersTemp);
     setSelectedCheckbox(
       selectedCheckbox.filter((selected) => {
         return selected != memberId;
@@ -85,19 +92,45 @@ const Body = () => {
 
   const addAllInSelected = () => {
     let allCheckbox = [];
-    filteredMembers
-      .slice((page - 1) * recordsPerPage, page * recordsPerPage)
-      .map((member, index) => {
-        allCheckbox.push(parseInt(member.id));
-      });
-    setAllCheckboxInCurrPage(true);
-    // filteredMembers.forEach((member) => {
-    //   allCheckbox.push(parseInt(member.id));
-    // });
-    setSelectedCheckbox(allCheckbox);
+    if (!allCheckboxInCurrPage.includes(page)) {
+      allCheckbox = [...selectedCheckbox];
+      filteredMembers
+        .slice((page - 1) * recordsPerPage, page * recordsPerPage)
+        .map((member, index) => {
+          if (!selectedCheckbox.includes(parseInt(member.id))) {
+            allCheckbox.push(parseInt(member.id));
+          }
+          // allCheckbox.push(parseInt(member.id));
+        });
+
+      setAllCheckboxInCurrPage([...allCheckboxInCurrPage, page]);
+      // filteredMembers.forEach((member) => {
+      //   allCheckbox.push(parseInt(member.id));
+      // });
+      setSelectedCheckbox(allCheckbox);
+    } else {
+      let newSelectedCheckbox = [...selectedCheckbox];
+      filteredMembers
+        .slice((page - 1) * recordsPerPage, page * recordsPerPage)
+        .map((member, index) => {
+          let findIndex = newSelectedCheckbox.indexOf(parseInt(member.id));
+          if (findIndex > -1) {
+            newSelectedCheckbox.splice(findIndex, 1);
+          }
+          // allCheckbox.push(parseInt(member.id));
+        });
+      console.log(newSelectedCheckbox);
+
+      setSelectedCheckbox(newSelectedCheckbox);
+      setAllCheckboxInCurrPage(
+        allCheckboxInCurrPage.filter((all) => {
+          return all != page;
+        })
+      );
+    }
   };
 
-  const filterMembers = (text) => {
+  const filterMembers = (text, members) => {
     setSearchText(text);
 
     setFilteredMembers(
@@ -127,6 +160,29 @@ const Body = () => {
     setSearchText("");
   };
 
+  const CheckCheckBoxes = () => {
+    let allCheckBoxesSelected = true;
+    filteredMembers
+      .slice((page - 1) * recordsPerPage, page * recordsPerPage)
+      .map((member, index) => {
+        if (!selectedCheckbox.includes(parseInt(member.id))) {
+          allCheckBoxesSelected = false;
+          return;
+        }
+        // allCheckbox.push(parseInt(member.id));
+      });
+    let index = allCheckboxInCurrPage.findIndex((currPage) => currPage == page);
+    if (index == -1 && allCheckBoxesSelected) {
+      setAllCheckboxInCurrPage([...allCheckboxInCurrPage, page]);
+    } else if (index > -1 && !allCheckBoxesSelected) {
+      setAllCheckboxInCurrPage(
+        allCheckboxInCurrPage.filter((checked) => {
+          return checked != page;
+        })
+      );
+    }
+  };
+
   return (
     <>
       {showModal && (
@@ -143,7 +199,7 @@ const Body = () => {
             type="text"
             value={searchText}
             onChange={(e) => {
-              filterMembers(e.target.value);
+              filterMembers(e.target.value, members);
             }}
             placeholder="Search by name, email and role"
           />
@@ -157,7 +213,7 @@ const Body = () => {
                   onChange={(e, elem) => {
                     addAllInSelected();
                   }}
-                  checked={allCheckboxInCurrPage}
+                  checked={allCheckboxInCurrPage.includes(page)}
                   className="checkbox"
                 />
               </th>
@@ -217,7 +273,7 @@ const Body = () => {
                 deleteMultipleMembers();
               }}
             >
-              Delete Button
+              Delete {selectedCheckbox.length} members
             </button>
           )}
           <div className="pagination-btns-container">
