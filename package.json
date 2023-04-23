@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Geek trust challenge using react",
   "homepage": "https://gaurav9812.io/react-gh-pages",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel index.html",
@@ -19,6 +18,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "gh-pages": "^5.0.0",
     "process": "^0.11.10"
   }
 }
