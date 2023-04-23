@@ -15,15 +15,21 @@ body {
 
 .search-container {
   width: 100%;
-  display: flex;
   justify-content: center;
   margin: 20px;
+  flex-direction: column;
+  display: flex;
+  align-items: center;
 }
 
 .search-container > input {
   width: 50%;
   padding: 10px;
   border: 2px solid rgb(217, 89, 89);
+}
+.search-container > p {
+  width: 50%;
+  color: red;
 }
 
 .table-container {
@@ -66,11 +72,11 @@ td {
 }
 
 .delete-btn {
-  border: 0px;
-  border-radius: 10px;
-  padding: 8px;
-  background-color: rgb(175, 72, 72);
-  color: white;
+  width: 12%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: antiquewhite;
   cursor: pointer;
 }
 .pagination-btns-container {
@@ -85,7 +91,7 @@ td {
 }
 .page-btn {
   padding: 10px;
-  border-radius: 50%;
+
   cursor: pointer;
 }
 
@@ -154,4 +160,36 @@ select {
   padding: 8px;
   border: 0;
   border-radius: 8px;
+}
+
+@media screen and (max-width: 600px) {
+  body {
+    font-size: 12px;
+  }
+
+  table {
+    width: 100%;
+  }
+
+  .checkbox {
+    width: 12px;
+  }
+  td {
+    padding: 4px;
+  }
+  .pagination {
+    width: 90%;
+  }
+  .delete-btn {
+    width: 15%;
+  }
+  .arrow-btns {
+    width: 13px;
+  }
+  .page-btn {
+    padding: 5px;
+  }
+  .action-icon {
+    width: 12px;
+  }
 }

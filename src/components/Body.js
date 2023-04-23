@@ -6,7 +6,7 @@ import DoubleRightArrow from "./assets/img/double-right-arrow.png";
 import Writing from "./assets/img/writing.png";
 import Delete from "./assets/img/delete.png";
 import UpdateModal from "./UpdateModal";
-import { addCheckBox } from "../utils/helpers";
+import { GEEKTRUST_URL, addCheckBox } from "../utils/helpers";
 
 const Body = () => {
   const [members, setMembers] = useState([
@@ -35,7 +35,6 @@ const Body = () => {
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const [recordsPerPage, setRecordsPerPage] = useState(10);
-  const [allCheckboxInCurrPage, setAllCheckboxInCurrPage] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [toUpdate, setToUpdate] = useState({});
 
@@ -47,17 +46,9 @@ const Body = () => {
     getMembers();
   }, []);
 
-  useEffect(() => {
-    CheckCheckBoxes();
-  }, [selectedCheckbox, filteredMembers]);
-  // console.log(members)
-  // console.log(selectedCheckbox);
-
   async function getMembers() {
     try {
-      let response = await fetch(
-        "https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json"
-      );
+      let response = await fetch(GEEKTRUST_URL);
       let json = await response.json();
 
       setMembers(json);
@@ -71,7 +62,6 @@ const Body = () => {
     let filteredMembersTemp = members.filter((member) => {
       return member.id != memberId;
     });
-    // setFilteredMembers(filteredMembersTemp);
     setMembers(filteredMembersTemp);
     filterMembers(searchText, filteredMembersTemp);
     setSelectedCheckbox(
@@ -90,9 +80,9 @@ const Body = () => {
     setSelectedCheckbox([]);
   };
 
-  const addAllInSelected = () => {
+  const addAllInSelected = (checked) => {
     let allCheckbox = [];
-    if (!allCheckboxInCurrPage.includes(page)) {
+    if (!checked) {
       allCheckbox = [...selectedCheckbox];
       filteredMembers
         .slice((page - 1) * recordsPerPage, page * recordsPerPage)
@@ -100,13 +90,8 @@ const Body = () => {
           if (!selectedCheckbox.includes(parseInt(member.id))) {
             allCheckbox.push(parseInt(member.id));
           }
-          // allCheckbox.push(parseInt(member.id));
         });
 
-      setAllCheckboxInCurrPage([...allCheckboxInCurrPage, page]);
-      // filteredMembers.forEach((member) => {
-      //   allCheckbox.push(parseInt(member.id));
-      // });
       setSelectedCheckbox(allCheckbox);
     } else {
       let newSelectedCheckbox = [...selectedCheckbox];
@@ -117,16 +102,9 @@ const Body = () => {
           if (findIndex > -1) {
             newSelectedCheckbox.splice(findIndex, 1);
           }
-          // allCheckbox.push(parseInt(member.id));
         });
-      console.log(newSelectedCheckbox);
 
       setSelectedCheckbox(newSelectedCheckbox);
-      setAllCheckboxInCurrPage(
-        allCheckboxInCurrPage.filter((all) => {
-          return all != page;
-        })
-      );
     }
   };
 
@@ -136,9 +114,9 @@ const Body = () => {
     setFilteredMembers(
       members.filter((member) => {
         return (
-          member.role.toLowerCase() == text.toLowerCase() ||
-          member.name.toLowerCase() == text.toLowerCase() ||
-          member.email.toLowerCase() == text.toLowerCase() ||
+          member.role.toLowerCase().includes(text.toLowerCase()) ||
+          member.name.toLowerCase().includes(text.toLowerCase()) ||
+          member.email.toLowerCase().includes(text.toLowerCase()) ||
           text == ""
         );
       })
@@ -160,28 +138,20 @@ const Body = () => {
     setSearchText("");
   };
 
-  const CheckCheckBoxes = () => {
-    let allCheckBoxesSelected = true;
+  const checkForAllBoxInCurrPage = () => {
+    let flag = true;
     filteredMembers
       .slice((page - 1) * recordsPerPage, page * recordsPerPage)
-      .map((member, index) => {
+      .map((member) => {
         if (!selectedCheckbox.includes(parseInt(member.id))) {
-          allCheckBoxesSelected = false;
+          flag = false;
           return;
         }
-        // allCheckbox.push(parseInt(member.id));
       });
-    let index = allCheckboxInCurrPage.findIndex((currPage) => currPage == page);
-    if (index == -1 && allCheckBoxesSelected) {
-      setAllCheckboxInCurrPage([...allCheckboxInCurrPage, page]);
-    } else if (index > -1 && !allCheckBoxesSelected) {
-      setAllCheckboxInCurrPage(
-        allCheckboxInCurrPage.filter((checked) => {
-          return checked != page;
-        })
-      );
-    }
+    return flag;
   };
+
+  let checked = checkForAllBoxInCurrPage();
 
   return (
     <>
@@ -203,6 +173,11 @@ const Body = () => {
             }}
             placeholder="Search by name, email and role"
           />
+          <p>
+            {searchText != "" &&
+              filteredMembers.length > 0 &&
+              filteredMembers.length + " members found"}
+          </p>
         </div>
         <table>
           <thead>
@@ -211,9 +186,9 @@ const Body = () => {
                 <input
                   type="checkbox"
                   onChange={(e, elem) => {
-                    addAllInSelected();
+                    addAllInSelected(checked);
                   }}
-                  checked={allCheckboxInCurrPage.includes(page)}
+                  checked={checked}
                   className="checkbox"
                 />
               </th>
@@ -267,14 +242,15 @@ const Body = () => {
         </table>
         <div className="pagination">
           {selectedCheckbox.length > 0 && (
-            <button
+            <div
               className="delete-btn"
               onClick={() => {
                 deleteMultipleMembers();
               }}
             >
-              Delete {selectedCheckbox.length} members
-            </button>
+              <img src={Delete} className="action-icon" />(
+              {selectedCheckbox.length})
+            </div>
           )}
           <div className="pagination-btns-container">
             <img
@@ -332,4 +308,5 @@ const Body = () => {
     </>
   );
 };
+
 export default Body;
