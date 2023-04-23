@@ -2,7 +2,7 @@
   "name": "admin-ui",
   "version": "1.0.0",
   "description": "Geek trust challenge using react",
-  "homepage": "https://gaurav9812.io/react-gh-pages",
+  "homepage": "https://gaurav9812.github.io/admin-ui-react",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prebuild": "shx rm -rf dist/*",
